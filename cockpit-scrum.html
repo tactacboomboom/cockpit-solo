@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cockpit — Audit Scrum (Wireframe vN)</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#fafafa;color:#111}
+    main{max-width:1000px;margin:0 auto;padding:18px}
+    h1{margin:0 0 8px;font-size:20px}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+    .pill{border:1px solid #ddd;border-radius:999px;padding:4px 10px;font-size:12px;background:#fff}
+    .card{background:#fff;border:1px solid #e6e6e6;border-radius:12px;padding:12px;margin-bottom:12px}
+    .card h2{margin:0 0 8px;font-size:14px}
+    label{display:block;font-size:12px;color:#444;margin:10px 0 6px}
+    input,textarea{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px;font:inherit;background:#fff}
+    textarea{min-height:80px;resize:vertical}
+    details{background:#fff;border:1px solid #e6e6e6;border-radius:12px;padding:8px;margin-bottom:12px;border-radius:12px}
+    summary{cursor:pointer;font-weight:800;font-size:13px;list-style:none}
+    summary::-webkit-details-marker{display:none}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    button{border:1px solid #ddd;background:#111;color:#fff;border-radius:10px;padding:9px 11px;font:inherit;cursor:pointer}
+    button.secondary{background:#f4f4f4;color:#111}
+    pre{white-space:pre-wrap;background:#0b0b0b;color:#f5f5f5;border-radius:10px;padding:10px;margin:8px 0 0}
+    .muted{color:#666;font-size:12px}
+    .warn{color:#b45309}
+    .ok{color:#166534}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+  </style>
+</head>
+<body>
+<main>
+  <div class="bar">
+    <h1>Cockpit — Audit Scrum (wireframe vN)</h1>
+    <span class="pill" id="pillDate"></span>
+    <span class="pill">Page B</span>
+  </div>
+
+  <section class="card">
+    <h2>Entrées (depuis Page A)</h2>
+    <div class="row">
+      <div style="flex:1;min-width:260px">
+        <div class="muted">Projet</div>
+        <div><strong id="projectName"></strong></div>
+        <div class="muted" id="projectVision"></div>
+      </div>
+      <div style="flex:1;min-width:260px">
+        <div class="muted">Intention du jour</div>
+        <div><strong id="intention"></strong></div>
+        <div class="muted">Done (Page A): <span id="dodA"></span></div>
+      </div>
+    </div>
+    <div class="row">
+      <button class="secondary" id="backToA">← Retour Page A</button>
+      <button class="secondary" id="loadFromA">Rafraîchir depuis Page A</button>
+      <button class="secondary" id="loadSaved">Charger sauvegarde (date)</button>
+    </div>
+    <div class="muted">Cette page force la cohérence. Elle ne “fait” rien à ta place.</div>
+  </section>
+
+  <!-- Episodes Scrum -->
+  <details open class="card">
+    <summary>Épisode 1 — Vision (PO)</summary>
+    <div class="muted">1 phrase. Pas une liste de features.</div>
+    <label>Vision</label>
+    <textarea id="vision" placeholder="Ex: Permettre à une personne solo de piloter un sprint quotidien sans se mentir."></textarea>
+  </details>
+
+  <details open class="card">
+    <summary>Épisode 2 — Product Goal (PO)</summary>
+    <div class="muted">Résultat stable et proche. Pas “faire X features”.</div>
+    <label>Product Goal</label>
+    <textarea id="productGoal" placeholder="Ex: Page A + Page B utilisables chaque matin/soir en moins de 2 minutes."></textarea>
+  </details>
+
+  <details open class="card">
+    <summary>Épisode 3 — Product Backlog minimal (PO)</summary>
+    <div class="muted">3–10 PBIs max, ordonnés, testables.</div>
+    <label>PBIs (un par ligne, déjà priorisés)</label>
+    <textarea id="pbiList" placeholder="1) ...&#10;2) ...&#10;3) ..."></textarea>
+
+    <label>Critères d’acceptation (optionnel, 1–2 lignes par PBI)</label>
+    <textarea id="pbiAC" placeholder="PBI1: ...&#10;PBI2: ..."></textarea>
+  </details>
+
+  <details open class="card">
+    <summary>Épisode 4 — Sprint Planning (PO + DEV + SM)</summary>
+    <div class="muted">Sprint Goal + Sprint Backlog (3–5) + DoD testable.</div>
+
+    <label>Sprint Goal (1 phrase)</label>
+    <textarea id="sprintGoal" placeholder="Ex: Livrer la version du jour utilisable + contrat validé."></textarea>
+
+    <label>Sprint Backlog (3–5 items max, déjà priorisés)</label>
+    <textarea id="sprintBacklog" placeholder="1) ...&#10;2) ...&#10;3) ..."></textarea>
+
+    <!-- Added counters/warnings -->
+    <div class="muted" id="sbCount"></div>
+    <div class="muted warn" id="sbWarn" style="display:none">
+      Sprint Backlog &gt; 5 items → sprint invalide (trop gros).
+    </div>
+
+    <label>Definition of Done (binaire, visible)</label>
+    <textarea id="dodScrum" placeholder="- ...&#10;- ...&#10;- ..."></textarea>
+  </details>
+
+  <details open class="card">
+    <summary>Épisode 5 — ΣK (Savoir-faire minimal)</summary>
+    <div class="muted warn">Si tu mets 25 items ici, tu es en train de faire une école, pas un sprint.</div>
+    <label>ΣK (≤10 items, un par ligne)</label>
+    <textarea id="sigmaK" placeholder="1) ...&#10;2) ...&#10;3) ..."></textarea>
+
+    <!-- Added counters/warnings -->
+    <div class="muted" id="kCount"></div>
+    <div class="muted warn" id="kWarn" style="display:none">
+      ΣK &gt; 10 items → tu es en formation, pas en sprint.
+    </div>
+  </details>
+
+  <details open class="card">
+    <summary>Épisode 6 — Sortie (Contrat SPRINT copiable)</summary>
+    <div class="muted">On génère un bloc contractuel + statut de validation (✅/⛔).</div>
+
+    <!-- Added validation status -->
+    <div class="muted" id="validStatus"></div>
+
+    <pre id="contract"></pre>
+    <div class="row">
+      <button class="secondary" id="copyContract">Copier</button>
+      <button id="saveToA">Sauver la sortie (vers Page A)</button>
+    </div>
+    <div class="muted">
+      “Sauver” écrit dans <code>cockpit:scrum:DATE</code>. Page A lit le contrat via la date.
+    </div>
+  </details>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  // Date
+  function toISODate(d){ return d.toISOString().slice(0,10); }
+  const url = new URL(location.href);
+  const currentISO = url.searchParams.get("d") || toISODate(new Date());
+  $("pillDate").textContent = "Date: " + currentISO;
+
+  // Storage keys (must match Page A)
+  const KEY_PROJECT = "cockpit:project";
+  const KEY_DAY = (d) => `cockpit:day:${d}`;
+  const KEY_SCRUM = (d) => `cockpit:scrum:${d}`;
+
+  function load(key){ try { return JSON.parse(localStorage.getItem(key) || "null"); } catch { return null; } }
+  function save(key,obj){ localStorage.setItem(key, JSON.stringify(obj)); }
+
+  function readFromA(){
+    const p = load(KEY_PROJECT) || { name:"", vision:"" };
+    const day = load(KEY_DAY(currentISO)) || { todayIntention:"", todayDoD:"" };
+
+    $("projectName").textContent = p.name || "[Projet]";
+    $("projectVision").textContent = p.vision || "";
+    $("intention").textContent = day.todayIntention || "[Intention]";
+    $("dodA").textContent = day.todayDoD || "[Done]";
+  }
+
+  function countLines(text){
+    return (text || "")
+      .split("\n")
+      .map(s => s.trim())
+      .filter(Boolean).length;
+  }
+
+  function computeValidation(){
+    const sbN = countLines($("sprintBacklog").value);
+    const kN  = countLines($("sigmaK").value);
+
+    const sbOK = sbN > 0 && sbN <= 5;
+    const kOK  = kN > 0 && kN <= 10;
+
+    $("sbCount").textContent = `Sprint Backlog: ${sbN} item(s) (≤ 5 requis)`;
+    $("kCount").textContent  = `ΣK: ${kN} item(s) (≤ 10 requis)`;
+
+    $("sbWarn").style.display = sbOK ? "none" : "block";
+    $("kWarn").style.display  = kOK ? "none" : "block";
+
+    const validated = sbOK && kOK;
+    $("validStatus").textContent = validated
+      ? "VALIDATION: ✅ contrat validé"
+      : "VALIDATION: ⛔ contrat non validé";
+
+    return { validated, sbN, kN };
+  }
+
+  function buildContract(){
+    const v = computeValidation();
+
+    const project = $("projectName").textContent.trim() || "[Projet]";
+    const intention = $("intention").textContent.trim() || "[Intention]";
+    const doneA = $("dodA").textContent.trim() || "[Done]";
+
+    const vision = $("vision").value.trim() || "[Vision]";
+    const pg = $("productGoal").value.trim() || "[Product Goal]";
+    const pbi = $("pbiList").value.trim() || "[Product Backlog]";
+    const sGoal = $("sprintGoal").value.trim() || "[Sprint Goal]";
+    const sBacklog = $("sprintBacklog").value.trim() || "[Sprint Backlog]";
+    const dod = $("dodScrum").value.trim() || "[DoD]";
+    const k = $("sigmaK").value.trim() || "[ΣK]";
+
+    const status = v.validated ? "✅" : "⛔";
+
+    const txt =
+`VALIDATION: ${status} (SprintBacklog=${v.sbN}≤5, ΣK=${v.kN}≤10)
+
+SPRINT (contractuel)
+Projet: ${project}
+Date: ${currentISO}
+
+Intention (commanditaire):
+${intention}
+
+Vision:
+${vision}
+
+Product Goal:
+${pg}
+
+Product Backlog (ordonné):
+${pbi}
+
+Sprint Goal:
+${sGoal}
+
+Sprint Backlog (priorisé):
+${sBacklog}
+
+Definition of Done (binaire):
+${dod}
+
+ΣK (savoir-faire minimal):
+${k}
+
+Done (rappel Page A):
+${doneA}
+
+Review (soir):
+Done ? oui/non + écarts
+
+Retro (soir):
+OK / changer / 1 règle`;
+
+    $("contract").textContent = txt;
+    return { txt, validated: v.validated, metrics: v };
+  }
+
+  function saveOutput(){
+    const built = buildContract();
+
+    save(KEY_SCRUM(currentISO), {
+      date: currentISO,
+      validated: built.validated,
+      metrics: built.metrics,
+      contract: built.txt,
+      fields: {
+        vision: $("vision").value,
+        productGoal: $("productGoal").value,
+        pbiList: $("pbiList").value,
+        pbiAC: $("pbiAC").value,
+        sprintGoal: $("sprintGoal").value,
+        sprintBacklog: $("sprintBacklog").value,
+        dodScrum: $("dodScrum").value,
+        sigmaK: $("sigmaK").value
+      }
+    });
+
+    alert(built.validated
+      ? "Sortie sauvegardée (VALIDÉE). Retourne sur Page A → Rafraîchir."
+      : "Sortie sauvegardée (NON VALIDÉE). Corrige SprintBacklog/ΣK puis re-sauve.");
+  }
+
+  function loadSavedFields(){
+    const s = load(KEY_SCRUM(currentISO));
+    if (!s?.fields) return;
+    $("vision").value = s.fields.vision || "";
+    $("productGoal").value = s.fields.productGoal || "";
+    $("pbiList").value = s.fields.pbiList || "";
+    $("pbiAC").value = s.fields.pbiAC || "";
+    $("sprintGoal").value = s.fields.sprintGoal || "";
+    $("sprintBacklog").value = s.fields.sprintBacklog || "";
+    $("dodScrum").value = s.fields.dodScrum || "";
+    $("sigmaK").value = s.fields.sigmaK || "";
+  }
+
+  async function copyText(text){ await navigator.clipboard.writeText(text); }
+
+  // Events
+  $("backToA").addEventListener("click", ()=> window.location.href = `cockpit-action.html?d=${currentISO}`);
+  $("loadFromA").addEventListener("click", ()=> { readFromA(); buildContract(); });
+  $("loadSaved").addEventListener("click", ()=> { loadSavedFields(); buildContract(); });
+
+  ["vision","productGoal","pbiList","pbiAC","sprintGoal","sprintBacklog","dodScrum","sigmaK"]
+    .forEach(id => $(id).addEventListener("input", ()=> { buildContract(); }));
+
+  $("copyContract").addEventListener("click", ()=> copyText($("contract").textContent));
+  $("saveToA").addEventListener("click", saveOutput);
+
+  // Init
+  readFromA();
+  loadSavedFields();
+  buildContract();
+</script>
+</main>
+</body>
+</html>

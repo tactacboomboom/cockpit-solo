@@ -2,11 +2,360 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cockpit Solo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cockpit — Action (Wireframe vN)</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#fafafa;color:#111}
+    main{max-width:1000px;margin:0 auto;padding:18px}
+    h1{margin:0 0 8px;font-size:20px}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+    .pill{border:1px solid #ddd;border-radius:999px;padding:4px 10px;font-size:12px;background:#fff}
+    .grid{display:grid;gap:12px;grid-template-columns:1fr}
+    @media(min-width:980px){.grid{grid-template-columns:1fr 1fr}}
+    .card{background:#fff;border:1px solid #e6e6e6;border-radius:12px;padding:12px}
+    .card h2{margin:0 0 8px;font-size:14px}
+    label{display:block;font-size:12px;color:#444;margin:10px 0 6px}
+    input,textarea{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px;font:inherit;background:#fff}
+    textarea{min-height:88px;resize:vertical}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    button{border:1px solid #ddd;background:#111;color:#fff;border-radius:10px;padding:9px 11px;font:inherit;cursor:pointer}
+    button.secondary{background:#f4f4f4;color:#111}
+    pre{white-space:pre-wrap;background:#0b0b0b;color:#f5f5f5;border-radius:10px;padding:10px;margin:8px 0 0}
+    .muted{color:#666;font-size:12px}
+    .ok{color:#166534}
+    .warn{color:#b45309}
+  </style>
 </head>
 <body>
-  <h1>Ça marche.</h1>
-  <p>Si tu vois ce texte dans ton navigateur, ton monde local est prêt.</p>
+<main>
+  <div class="bar">
+    <h1>Cockpit — Action (wireframe vN)</h1>
+    <span class="pill" id="pillDate"></span>
+    <span class="pill">Page A</span>
+  </div>
+
+  <div class="card">
+    <h2>Header global</h2>
+    <div class="row">
+      <div style="flex:1;min-width:220px">
+        <label>Projet (nom)</label>
+        <input id="projectName" placeholder="Ex: Cockpit IA Solo" />
+      </div>
+      <div style="flex:1;min-width:220px">
+        <label>Vision courte (1–2 phrases)</label>
+        <input id="projectVision" placeholder="Ex: Pipeline quotidien pour livrer sans me mentir." />
+      </div>
+    </div>
+    <div class="row">
+      <button class="secondary" id="prevDay">← Jour -1</button>
+      <button class="secondary" id="nextDay">Jour +1 →</button>
+      <button class="secondary" id="todayBtn">Aujourd’hui</button>
+      <button id="saveProject">Sauver projet</button>
+    </div>
+    <div class="muted">Navigation = change la date de l’itération.</div>
+  </div>
+
+  <div class="grid" style="margin-top:12px">
+    <!-- HIER -->
+    <section class="card">
+      <h2>Hier (itération N-1)</h2>
+
+      <label>Résumé (3 lignes max)</label>
+      <textarea id="ySummary" placeholder="1) ...&#10;2) ...&#10;3) ..."></textarea>
+
+      <label>Recommandation pour aujourd’hui (1 phrase)</label>
+      <input id="yReco" placeholder="Ex: Réduire le backlog à 5 items max + DoD plus strict" />
+
+      <div class="row">
+        <button class="secondary" id="loadYesterday">Charger Hier</button>
+        <button class="secondary" id="copyRecoToToday">Copier reco → Aujourd’hui</button>
+        <button id="saveYesterday">Sauver Hier</button>
+      </div>
+
+      <div class="muted">
+        <span id="yLines"></span>
+        <span id="yWarn" class="warn" style="display:none">Résumé trop long → tu racontes ta vie.</span>
+      </div>
+      <div class="muted">Source unique: Hier est lu depuis <code>cockpit:day:YYYY-MM-DD</code>.</div>
+    </section>
+
+    <!-- AUJOURD'HUI -->
+    <section class="card">
+      <h2>Aujourd’hui (intention + DoD)</h2>
+
+      <label>Intention du jour (1 phrase)</label>
+      <input id="todayIntention" placeholder="Ex: Rendre l’audit Scrum plus strict (validation ✅/⛔)" />
+
+      <label>Done (binaire, visible)</label>
+      <input id="todayDoD" placeholder="Ex: Contrat affiche VALIDATION + A affiche statut + Hier sans doublon" />
+
+      <div class="row">
+        <button class="secondary" id="saveToday">Sauver Aujourd’hui</button>
+        <button class="secondary" id="openScrum">Ouvrir Audit Scrum (Page B)</button>
+      </div>
+
+      <div class="muted">Si c’est flou ici, tu vas souffrir plus tard. Donc on bloque.</div>
+    </section>
+
+    <!-- PROMPT -->
+    <section class="card">
+      <h2>Prompt (coller dans ChatGPT)</h2>
+      <div class="muted">But: transformer intention → sprint faisable (via Page B).</div>
+      <pre id="promptOut"></pre>
+      <div class="row">
+        <button class="secondary" id="copyPrompt">Copier prompt</button>
+      </div>
+      <div class="muted ok" id="copiedMsg" style="display:none">Copié.</div>
+    </section>
+
+    <!-- CONTRAT / SPRINT -->
+    <section class="card">
+      <h2>SPRINT contractuel (sortie)</h2>
+      <div class="muted">Alimenté par Page B (Audit Scrum). Si vide, pas de contrat.</div>
+      <pre id="contractOut"></pre>
+      <div class="row">
+        <button class="secondary" id="copyContract">Copier le contrat</button>
+        <button class="secondary" id="refreshContract">Rafraîchir depuis Page B</button>
+      </div>
+      <div class="muted">Le contrat inclut un statut <strong>VALIDATION: ✅/⛔</strong> issu de Page B.</div>
+    </section>
+  </div>
+
+  <!-- SOIR -->
+  <section class="card" style="margin-top:12px">
+    <h2>Soir (Review + Retro + Reco)</h2>
+
+    <label>Review: Done ? (oui/non) + écarts</label>
+    <textarea id="review" placeholder="Done: oui/non&#10;Écarts: ..."></textarea>
+
+    <label>Retro: 1 OK / 1 à changer / 1 règle</label>
+    <textarea id="retro" placeholder="OK: ...&#10;Changer: ...&#10;Règle: ..."></textarea>
+
+    <label>Reco pour demain (1 phrase)</label>
+    <input id="recoNext" placeholder="Ex: Rendre Sprint Backlog ≤ 5 obligatoire + ΣK ≤ 10" />
+
+    <div class="row">
+      <button id="saveEvening">Sauver Soir</button>
+    </div>
+    <div class="muted">Cette reco alimente “Hier” demain (source unique = KEY_DAY).</div>
+  </section>
+</main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  // --- Date handling (YYYY-MM-DD) ---
+  function toISODate(d){ return d.toISOString().slice(0,10); }
+  function fromISODate(s){
+    const [y,m,dd] = s.split("-").map(Number);
+    return new Date(Date.UTC(y, m-1, dd));
+  }
+
+  const url = new URL(location.href);
+  const paramDate = url.searchParams.get("d");
+  const todayISO = toISODate(new Date());
+  let currentISO = paramDate || todayISO;
+
+  function setDatePill(){ $("pillDate").textContent = "Date: " + currentISO; }
+
+  // --- Storage keys ---
+  const KEY_PROJECT = "cockpit:project";
+  const KEY_DAY = (d) => `cockpit:day:${d}`;     // single source of truth (day record)
+  const KEY_SCRUM = (d) => `cockpit:scrum:${d}`; // output from Page B (contract + validated)
+
+  function load(key){ try { return JSON.parse(localStorage.getItem(key) || "null"); } catch { return null; } }
+  function save(key,obj){ localStorage.setItem(key, JSON.stringify(obj)); }
+
+  // --- Load project ---
+  function loadProject(){
+    const p = load(KEY_PROJECT) || { name:"", vision:"" };
+    $("projectName").value = p.name || "";
+    $("projectVision").value = p.vision || "";
+  }
+  function saveProject(){
+    save(KEY_PROJECT, { name: $("projectName").value.trim(), vision: $("projectVision").value.trim() });
+  }
+
+  // --- Load day ---
+  function loadDay(){
+    const day = load(KEY_DAY(currentISO)) || {
+      todayIntention:"", todayDoD:"",
+      review:"", retro:"", recoNext:"",
+      ySummary:""
+    };
+    $("todayIntention").value = day.todayIntention || "";
+    $("todayDoD").value = day.todayDoD || "";
+    $("review").value = day.review || "";
+    $("retro").value = day.retro || "";
+    $("recoNext").value = day.recoNext || "";
+  }
+
+  function saveDay(){
+    const prev = load(KEY_DAY(currentISO)) || {};
+    const day = {
+      ...prev,
+      todayIntention: $("todayIntention").value.trim(),
+      todayDoD: $("todayDoD").value.trim(),
+      review: $("review").value,
+      retro: $("retro").value,
+      recoNext: $("recoNext").value.trim()
+    };
+    save(KEY_DAY(currentISO), day);
+  }
+
+  // --- Yesterday is currentISO - 1 day ---
+  function getYesterdayISO(){
+    const d = fromISODate(currentISO);
+    d.setUTCDate(d.getUTCDate() - 1);
+    return toISODate(d);
+  }
+
+  function loadYesterday(){
+    const yISO = getYesterdayISO();
+    const yDay = load(KEY_DAY(yISO)) || {};
+
+    // Résumé: priorité au champ explicite ySummary, sinon dérivation depuis review/retro
+    let summary = (yDay.ySummary || "").trim();
+    if (!summary){
+      const r = (yDay.review || "").trim();
+      const t = (yDay.retro || "").trim();
+
+      const r1 = r.split("\n").map(s=>s.trim()).filter(Boolean)[0] || "";
+      const ok = t.split("\n").map(s=>s.trim()).filter(Boolean).find(l => l.toLowerCase().startsWith("ok")) || "";
+      const rule = t.split("\n").map(s=>s.trim()).filter(Boolean).find(l => l.toLowerCase().startsWith("règle")) || "";
+
+      const lines = [];
+      if (r1) lines.push(`1) ${r1}`);
+      if (ok) lines.push(`2) ${ok}`);
+      if (rule) lines.push(`3) ${rule}`);
+      summary = lines.join("\n");
+    }
+
+    // Reco: provient du soir d’hier (recoNext)
+    const reco = (yDay.recoNext || "").trim();
+
+    $("ySummary").value = summary || "";
+    $("yReco").value = reco || "";
+    updateYLines();
+  }
+
+  function saveYesterday(){
+    const yISO = getYesterdayISO();
+    const yDay = load(KEY_DAY(yISO)) || {};
+
+    yDay.ySummary = $("ySummary").value;         // note explicite
+    yDay.recoNext = $("yReco").value.trim();     // boucle: ce que tu écris là devient recoNext
+    save(KEY_DAY(yISO), yDay);
+  }
+
+  function copyRecoToToday(){
+    const reco = $("yReco").value.trim();
+    if (!reco) return;
+    $("todayIntention").value = reco;
+    buildPrompt();
+  }
+
+  // --- Prompt output ---
+  function buildPrompt(){
+    const intention = $("todayIntention").value.trim() || "[INTENTION DU JOUR]";
+    const dod = $("todayDoD").value.trim() || "[DONE BINAIRE]";
+    const proj = $("projectName").value.trim() || "[NOM PROJET]";
+
+    const txt =
+`RÔLE
+Tu es un assistant de réduction radicale: rendre l’objectif faisable aujourd’hui + produire un sprint contractuel.
+
+CONTEXTE
+Projet: ${proj}
+Date: ${currentISO}
+
+INTENTION (1 phrase)
+${intention}
+
+DONE (binaire, visible)
+${dod}
+
+TÂCHE
+1) Transformer intention → Vision, Product Goal
+2) Construire Product Backlog (3–10 PBIs, ordonnés, testables)
+3) Faire Sprint Planning: Sprint Goal + Sprint Backlog (3–5) + DoD
+4) Extraire Σ K: savoir-faire minimal (≤10 items)
+5) Sortir un contrat “SPRINT” (copiable) + points Review/Retro`;
+    $("promptOut").textContent = txt;
+  }
+
+  // --- Contract output from Page B (includes validation) ---
+  function refreshContract(){
+    const s = load(KEY_SCRUM(currentISO));
+    const contract = s?.contract || "";
+    if (!s) {
+      $("contractOut").textContent = "";
+      return;
+    }
+
+    // Préfixe un statut si absent
+    const statusLine = s.validated ? "VALIDATION: ✅ contrat validé" : "VALIDATION: ⛔ contrat non validé";
+    const hasStatus = contract.includes("VALIDATION:");
+    $("contractOut").textContent = hasStatus ? contract : (statusLine + "\n\n" + contract).trim();
+  }
+
+  // --- Copy helpers ---
+  async function copyText(text){
+    await navigator.clipboard.writeText(text);
+    $("copiedMsg").style.display = "block";
+    setTimeout(()=> $("copiedMsg").style.display="none", 700);
+  }
+
+  function updateYLines(){
+    const lines = $("ySummary").value.split("\n").map(x=>x.trim()).filter(Boolean).length;
+    $("yLines").textContent = `Résumé: ${lines}/3 lignes`;
+    $("yWarn").style.display = lines > 3 ? "inline" : "none";
+  }
+
+  // --- Navigation ---
+  function goTo(iso){
+    url.searchParams.set("d", iso);
+    location.href = url.toString();
+  }
+
+  // --- Wire up events ---
+  $("prevDay").addEventListener("click", ()=> {
+    const d = fromISODate(currentISO); d.setUTCDate(d.getUTCDate()-1); goTo(toISODate(d));
+  });
+  $("nextDay").addEventListener("click", ()=> {
+    const d = fromISODate(currentISO); d.setUTCDate(d.getUTCDate()+1); goTo(toISODate(d));
+  });
+  $("todayBtn").addEventListener("click", ()=> goTo(todayISO));
+
+  $("saveProject").addEventListener("click", ()=> { saveProject(); buildPrompt(); alert("Projet sauvegardé."); });
+  $("saveToday").addEventListener("click", ()=> { saveDay(); buildPrompt(); alert("Aujourd’hui sauvegardé."); });
+
+  $("loadYesterday").addEventListener("click", loadYesterday);
+  $("saveYesterday").addEventListener("click", ()=> { saveYesterday(); alert("Hier sauvegardé."); });
+  $("copyRecoToToday").addEventListener("click", copyRecoToToday);
+
+  $("openScrum").addEventListener("click", ()=> {
+    saveProject(); saveDay();
+    window.open(`cockpit-scrum.html?d=${currentISO}`, "_blank");
+  });
+
+  $("saveEvening").addEventListener("click", ()=> { saveDay(); alert("Soir sauvegardé."); });
+
+  $("refreshContract").addEventListener("click", refreshContract);
+
+  $("copyPrompt").addEventListener("click", ()=> copyText($("promptOut").textContent));
+  $("copyContract").addEventListener("click", ()=> copyText($("contractOut").textContent || ""));
+
+  $("ySummary").addEventListener("input", ()=> { updateYLines(); });
+  ["projectName","projectVision","todayIntention","todayDoD"].forEach(id => $(id).addEventListener("input", buildPrompt));
+
+  // --- Init ---
+  setDatePill();
+  loadProject();
+  loadDay();
+  loadYesterday();
+  buildPrompt();
+  refreshContract();
+</script>
 </body>
 </html>
